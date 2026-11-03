@@ -14,4 +14,4 @@ grid battery to buy low and sell high, using public AEMO market data.
 - Frequency control (FCAS) markets
 
 ## Status
-M0: data spike in progress
+M0 complete: data spike done, see notebooks/01_spike.ipynb
