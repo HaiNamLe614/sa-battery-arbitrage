@@ -14,7 +14,7 @@ grid battery to buy low and sell high, using public AEMO market data.
 - Frequency control (FCAS) markets
 
 ## Status
-M2 in progress: weather data done, model next.
+M2 complete: LightGBM forecast beats the baseline by 34%. Next up is M3, the battery optimiser.
 
 ## Data
 - AEMO aggregated price and demand data for SA1, 5-minute intervals, Nov 2023 to Oct 2025
@@ -46,7 +46,7 @@ Notebook: `notebooks/02_baseline.ipynb`
 | Same time last week | 80.3 | 77.4 | 374.5 |
 | Median of last 7 days | **58.4** | **55.3** | 370.5 |
 
-The 7-day median is the best baseline, so **the number to beat is an MAE of 58.4.** My target for M2 is under 50.
+The 7-day median is the best baseline, so **the number to beat is an MAE of 58.4.**
 
 What I learned:
 - The baseline gets the midday solar trough right almost every day.
@@ -55,16 +55,34 @@ What I learned:
 - Same time yesterday is better on spikes than the median, which suggests spikes come in runs.
 
 ## M2: Forecasting model
-Notebook: `notebooks/03_weather.ipynb`
+Notebooks: `notebooks/03_weather.ipynb`, `notebooks/04_model.ipynb`
 
-- Day-ahead weather forecasts from Open-Meteo's Previous Runs API ("previous day 1"), for Adelaide, Snowtown and Hallett
-- Data starts on 17 Feb 2024, when the archive has every variable
-- Evening prices drop steadily as the wind forecast rises: median 189 on the calmest 25% of evenings vs 81 on the windiest 25%
+**Weather data:** I used day-ahead forecasts ("previous day 1"), not actual weather, since that's what would really be known at midnight. Evening prices drop steadily as the wind forecast rises: median 189 on the calmest 25% of evenings vs 81 on the windiest 25%.
+
+**Features:** calendar (time of day, day of week, month, SA public holidays), price and demand from yesterday and last week, yesterday's price summary, and wind, solar, cloud and temperature forecasts. Every feature is known at midnight before the day being forecast.
+
+**Model:** LightGBM with an L1 (MAE) objective, trained on Feb 2024 to Apr 2025, with early stopping on May to Jul 2025.
+
+| | Baseline (median_7d) | LightGBM | Improvement |
+|---|---|---|---|
+| MAE overall | 58.4 | **38.8** | 34% |
+| MAE normal | 55.3 | **36.1** | 35% |
+| MAE spike | 370.5 | **307.8** | 17% |
+
+What I learned:
+- The model starts from the usual daily shape (the baselines are its top features) and adjusts it using the weather.
+- It correctly predicts the windy evenings the baseline got wrong, where prices stay near 0 instead of rising.
+- The biggest remaining errors are the morning and evening ramps, and spikes.
+
+Limitations:
+- Spikes are still badly predicted. An MAE objective aims for the typical price, so the model rarely predicts one.
+- Validation was winter and test was spring, so it hasn't been tested on a summer with heatwaves.
+- Only about 14 months of training data, because the weather forecast archive starts in Feb 2024.
 
 ## Roadmap
 - [x] M0: Setup and data exploration
 - [x] M1: Baseline forecast
-- [ ] M2: Forecasting model with weather features
+- [x] M2: Forecasting model with weather features
 - [ ] M3: Battery optimiser
 - [ ] M4: Package, tests and CI
 - [ ] M5: Database and data pipeline
