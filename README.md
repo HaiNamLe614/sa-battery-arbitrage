@@ -14,7 +14,7 @@ grid battery to buy low and sell high, using public AEMO market data.
 - Frequency control (FCAS) markets
 
 ## Status
-M1 complete: baseline forecast done. Next up is M2, a forecasting model with weather features.
+M2 in progress: weather data done, model next.
 
 ## Data
 - AEMO aggregated price and demand data for SA1, 5-minute intervals, Nov 2023 to Oct 2025
@@ -53,6 +53,13 @@ What I learned:
 - Most of the error comes from evenings. Either wind covers demand and prices stay near 0, or it doesn't and they jump past 100. The baseline averages the two, so it's wrong either way.
 - Spikes only add about 4 to the overall MAE, so better forecasts on normal days matter more than chasing spikes.
 - Same time yesterday is better on spikes than the median, which suggests spikes come in runs.
+
+## M2: Forecasting model
+Notebook: `notebooks/03_weather.ipynb`
+
+- Day-ahead weather forecasts from Open-Meteo's Previous Runs API ("previous day 1"), for Adelaide, Snowtown and Hallett
+- Data starts on 17 Feb 2024, when the archive has every variable
+- Evening prices drop steadily as the wind forecast rises: median 189 on the calmest 25% of evenings vs 81 on the windiest 25%
 
 ## Roadmap
 - [x] M0: Setup and data exploration
